@@ -1,16 +1,16 @@
 
 ## Codebook for the resultant tidy data set. 
 
-as part of the Course Project for Getting and Cleaning Data course by Coursera.
+As part of the Course Project for Getting and Cleaning Data course by Coursera.
 
-the details of the raw data can be found under the followign links:
+The details of the raw data can be found under the following links:
 http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones 
 
-The resultant tidy data set contains one observation one each row.
-The first 66 columns contain one feature per row, 
-the last 2 columns provide the activity label and the subject.
+The resultant tidy data set contains one observation at each row.
+The first 2 columns provide the activity label and the subject.
+The rest 66 columns contain one feature per column.
 
-The features are the mean and standard deviation on the 33 variables collected.
+The features are the averages per subject and per activity (of the mean and standard deviation) on the 33 variables collected.
 
 The test data is composed of the following 3 files. They were read into seperate 
 objects. The dimensions are as follows:
