@@ -1,0 +1,27 @@
+---
+title: "DDP_Week2_Assignment_Leaflet_Map"
+author: "Cahit Bagdelen"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Population of the cities as of 01/01/2018:
+
+```{r city_populations, fig.cap='Populations as of 01/01/2018:', warning=FALSE, message=FALSE}
+library(dplyr)
+library(leaflet)
+cities <- data.frame(isim = c("Turgutlu", "Manisa", "Akhisar"),
+                        population = as.numeric(c(111000, 250000, 90000)),
+                        lat = c(38.502789, 38.623081, 38.920369),
+                        lng = c(27.706220, 27.396403, 27.835066),
+                        popup = c("<p> Population: 111000 </p>", "<p> Population: 250000 </p>", "<p> Population: 90000 </p>"))
+cities %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircles(weight = 1, radius = sqrt(cities$population) * 30) %>% 
+  addMarkers(popup = cities$popup)
+  
+```
