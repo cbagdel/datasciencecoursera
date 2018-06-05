@@ -1,0 +1,20 @@
+---
+title: "Developing Data Products"
+subtitle: "Week-3 Assignment"
+author: "Cahit Bagdelen"
+date: "01/03/2018"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## MPG vs Weigth with HorsePower dimension
+
+```{r plotly, results='markup', include=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+library(plotly)
+plot_ly(mtcars, x = ~wt, y = ~mpg, type = "scatter", mode = "markers", 
+        color = ~as.factor(cyl), size = ~hp)
+```
