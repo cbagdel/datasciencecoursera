@@ -1,0 +1,23 @@
+---
+title: "Shiny App for DDP Course Project"
+author: "Cahit Bagdelen"
+date: "11/06/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This Shiny App tries to visualize the iterations of a boosted model using Adaboost and 7 intermediate trees, based on rpart. 
+At each iteration Adaboost algorithm gives more weight to the misclassified samples, such that the next tree model has a better chance of classifying them correctly. At the end the final boosted model aggreates all intermediate models. 
+
+The user can select each intermediate model or the final boosted model simply using the radio button, and observe the nature of subsequent iterations. 
+
+The shiny app source files can be found here:
+
+#### server.R
+https://github.com/cbagdel/datasciencecoursera/blob/gh-pages/DevDataProducts/W4_courseProject/server.R 
+
+#### ui.R
+https://github.com/cbagdel/datasciencecoursera/blob/gh-pages/DevDataProducts/W4_courseProject/ui.R
