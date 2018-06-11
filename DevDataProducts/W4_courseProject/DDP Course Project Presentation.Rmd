@@ -1,0 +1,87 @@
+---
+title: "DDP Course Project"
+author: "Cahit Bagdelen"
+date: "11/06/2018"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introduction
+This Shiny App tries to visualize the iterations of a boosted model using Adaboost and 7 intermediate trees, based on rpart. 
+At each iteration Adaboost algorithm gives more weight to the misclassified samples, such that the next tree model has a better chance of classifying them correctly. At the end the final boosted model aggreates all intermediate models. 
+
+The user can select each intermediate model or the final boosted model simply using the radio button, and observe the nature of subsequent iterations. 
+
+The shiny app source files can be found here:
+
+- [server.R](https://github.com/cbagdel/datasciencecoursera/blob/gh-pages/DevDataProducts/W4_courseProject/server.R)
+- [ui.R](https://github.com/cbagdel/datasciencecoursera/blob/gh-pages/DevDataProducts/W4_courseProject/ui.R)
+
+
+## Misclassifications by interm. trees 1/2
+The boosted model is trained by usign Adaboost algorithm. With the implementation in `adabag` package, it is possible to access each intermediate tree, which are in our case trained using `rpart`, with 7 iterations:
+
+```
+adaboost <- boosting(formula = Species ~ Petal.Length + Petal.Width + Sepal.Length + Sepal.Width, data = training, boos = TRUE, mfinal = 7, coeflearn='Freund')
+```
+
+For instance, the below code extracts the 3rd intermediate decision tree, and predicts using that tree model. 
+
+```
+tree3 <- adaboost$trees[[3]]
+pred3 <- predict(tree3, newdata = data, type = "class")
+```
+
+## Misclassifications by interm. trees 2/2
+
+```{r plot, message=FALSE, warning=FALSE, fig.height=4, fig.width=8}
+library(plotly)
+library(caret)
+plot_misclassified <- function(predicted_class) {
+
+  p <- plot_ly(type = 'scatter', mode = 'markers')
+  p <- add_trace(p, data = data, x = ~Petal.Width, y = ~Petal.Length, color = ~Species, colors = c('blue','green'), hoverinfo = 'none', legendgroup = 'group1')
+  p <- add_trace(p, 
+                   data = data[which(data$Species != predicted_class), ],
+                   showlegend = TRUE,
+                     legendgroup = 'group2',
+                     name = 'misclassified',
+                     #color = ~predicted_class, 
+                     mode = 'markers',
+                     x = ~Petal.Width,
+                     y = ~Petal.Length,  
+                     hoverinfo = 'text',
+                     text = c('misclassified'),
+                     marker = list(symbol = 'diamond-open', size = 8, color = 'red'))
+    p
+}
+
+data("iris")
+data <- iris
+
+#reduce to binary class using: "versicolor" vs "others"
+data$Species <- as.factor(ifelse(iris$Species == "versicolor", "versicolor", "others"))
+
+#inTrain <- createDataPartition(y=data$Species, p=0.60, list=FALSE)
+#training <- data[inTrain,]
+#testing <- data[-inTrain,]
+#Use complete data set for visualizing purposes 
+training <- data
+
+library(adabag)
+set.seed(163)
+adaboost <- boosting(formula = Species ~ Petal.Length + Petal.Width + Sepal.Length + Sepal.Width, data = training, boos = TRUE, mfinal = 7, coeflearn='Freund')
+
+tree3 <- adaboost$trees[[3]]
+pred3 <- predict(tree3, newdata = data, type = "class")
+
+plot_misclassified(pred3)
+```
+Finally, using plot_ly the wrong predictions by this intermediate tree are marked in the plot. 
+The above code plots two dimensions where the observed classes are shown by colouring, and wrongly predicted classes by the 3rd tree are marked on this scatter plot.
+
+## The Shiny App
+<iframe src="https://cbagdelen.shinyapps.io/w4_courseproject/" style="border: none; width: 770px; height: 700px"></iframe>
