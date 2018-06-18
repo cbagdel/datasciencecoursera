@@ -1,0 +1,118 @@
+---
+title: "Course_Project_PracticalML"
+author: "Cahit Bagdelen"
+date: "13/06/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Loading Data 
+We will first load the data, and check dimensions: 
+```{r load_data}
+training <- read.csv("./W4/pml-training.csv")
+testing <- read.csv("./W4/pml-testing.csv")
+#View(training[1:100,])
+names(training)[names(training) != names(testing)]
+dim(training)
+# 19622 obs. of  160 variables 
+table(training$classe)
+dim(testing)
+#    20 obs. of  160 variables
+```
+
+## Initial Analysis and reducing data set
+Since there are 160 different columns, we will first try getting rid of the sparse columns, having agregated features over certain time windows, which naturally contains many missing values. 
+
+Some helper functions to measure sparsity: 
+```{r helper, dependson="load_data"}
+non_sparsity <- function(column, df) {
+  #gives the ratio of missing values to the total number of rows for a specific <column>
+  sum(!is.na(df[,column]) & df[,column] != "" & !is.null(df[,column]) & df[,column] != Inf & df[,column] != -Inf) / nrow(df)
+}
+
+collect_non_sparse <- function(df) {
+  #outputs sparsity ratio for each column in the given data frame <df>
+  non_sparsities <- data.frame(column = character(), non_sparsity = double())
+  for (col in names(df)) {  
+    non_sparsities <- rbind(non_sparsities, data.frame(column = col, non_sparsity = non_sparsity(col, df)))
+  }
+  return(non_sparsities)
+}
+```
+
+
+Using the helper functions, remove sparse columns having more than 10% missing values: 
+```{r remove_sparse, dependson="helper"}
+sp <- collect_non_sparse(training)
+head(sp)
+train_comp_cols <- training[, sp[sp$non_sparsity>0.9 ,1]]
+dim(train_comp_cols)
+# 19622 X 60
+```
+
+Since we are ignoring temporal continuity and taking just a set of measurements at a specific time point as an independent sample, we should also get rid of the 3 timestamp columns, as well as the 2 window columns, and the index column "X":
+```{r remove_ts, dependson="remove_sparse"}
+cols <- names(train_comp_cols)
+cols <- cols[!grepl("raw_timestamp_part_1",cols) & !grepl("raw_timestamp_part_2",cols) & !grepl("cvtd_timestamp",cols) 
+             & !grepl("new_window",cols) & !grepl("num_window",cols) & !grepl("X",cols)]
+train_comp_cols <- train_comp_cols[,cols]
+dim(train_comp_cols)
+# 19622 X 54
+```
+
+
+## Bootstrap resampling with parallel processing
+The given tiny test data will be used for the final validation, by means of quiz submission. 
+We need to estimate the out of sample error using cross validation on the training set. Since we ignore the temporal continuity, we treat it no longer as time series, and we can use the default bootsraped resampling. 
+On the other hand number of features and rows make the problem computationally challenging, that's we will use multi-threading as follows:
+```{r model, dependson="remove_ts"}
+#configure parallel processing to use all cores except one
+library(parallel)
+library(doParallel)
+library(caret)
+cluster <- makeCluster(detectCores() - 1) 
+registerDoParallel(cluster)
+
+#fit control to allow parallel processing and use default bootsrap resampling
+fitControl <- trainControl(allowParallel = TRUE)
+
+#train using caret
+#fit_rf <- train(classe ~ ., method = "rf", na.action = na.pass, train_comp_cols, trControl = fitControl)
+
+#deregister parallel 
+stopCluster(cluster)
+registerDoSEQ()
+
+#check the accuray estimate
+#print(fit_rf)
+
+#Resampling: Bootstrapped (25 reps) 
+#Summary of sample sizes: 19622, 19622, 19622, 19622, 19622, 19622, ... 
+#Resampling results across tuning parameters:
+#
+#  mtry  Accuracy   Kappa    
+#   2    0.9924911  0.9904968
+#  29    0.9932007  0.9913951
+#  57    0.9848740  0.9808565
+#
+#Accuracy was used to select the optimal model using  the largest value.
+#The final value used for the model was mtry = 29.
+
+# predict the classes for the 20 test samples
+#pred_rf_comp_cols <- predict(fit_rf, newdata = testing)
+#pred_rf_comp_cols
+# => B A B A A E D B A A B C B A E E A B B B
+```
+
+
+
+
+
+
+
+
+
